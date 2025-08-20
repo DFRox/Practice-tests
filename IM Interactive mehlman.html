@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical High-Yield Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        :root {
+            --primary-color: #4A90E2;
+            --primary-dark-color: #357ABD;
+            --secondary-color: #FFC107;
+            --background-color: #F0F2F5;
+            --card-background: #FFFFFF;
+            --text-color: #333333;
+            --light-text-color: #666666;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+        }
+        .quiz-title {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #E0E0E0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+            border-radius: 5px;
+        }
+        .question-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .options-container {
+            display: grid;
+            gap: 10px;
+        }
+        .option-button {
+            width: 100%;
+            padding: 15px 20px;
+            background-color: #F9F9F9;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .option-button:hover {
+            background-color: #EFEFEF;
+            border-color: var(--primary-color);
+        }
+        .option-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.5);
+        }
+        .option-button.correct {
+            background-color: #E8F5E9;
+            border-color: var(--correct-color);
+        }
+        .option-button.incorrect {
+            background-color: #FFEBEE;
+            border-color: var(--incorrect-color);
+        }
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .explanation-container {
+            background-color: #FFFDE7;
+            border-left: 5px solid #FFD54F;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 10px;
+            display: none;
+        }
+        .explanation-container p {
+            margin: 0;
+            line-height: 1.4;
+        }
+        .explanation-container.show {
+            display: block;
+        }
+        .feedback {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            display: none;
+        }
+        .feedback.correct {
+            color: var(--correct-color);
+        }
+        .feedback.incorrect {
+            color: var(--incorrect-color);
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--card-background);
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            flex-grow: 1;
+        }
+        .controls button:hover {
+            background-color: var(--primary-dark-color);
+        }
+        .controls button:disabled {
+            background-color: #BDBDBD;
+            cursor: not-allowed;
+        }
+        .start-screen, .results-screen, .review-screen {
+            text-align: center;
+        }
+        .start-screen h1, .results-screen h2, .review-screen h2 {
+            margin-bottom: 20px;
+        }
+        .start-screen p, .results-screen p {
+            font-size: 1.1rem;
+            color: var(--light-text-color);
+            margin-bottom: 30px;
+        }
+        .start-button, .restart-button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            background-color: var(--primary-color);
+            color: var(--card-background);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .start-button:hover, .restart-button:hover {
+            background-color: var(--primary-dark-color);
+        }
+        .results-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .results-summary {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        .results-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .results-buttons button {
+            flex-grow: 0;
+        }
+        .review-list {
+            text-align: left;
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .review-item {
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #E0E0E0;
+        }
+        .review-item h4 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+        }
+        .review-item .your-answer {
+            font-weight: 500;
+        }
+        .review-item .correct-answer {
+            color: var(--correct-color);
+        }
+        .review-item .incorrect-answer {
+            color: var(--incorrect-color);
+        }
+        .review-item .explanation {
+            margin-top: 10px;
+        }
+        .review-item .doc-ref {
+            font-size: 0.9rem;
+            color: var(--light-text-color);
+            margin-top: 5px;
+        }
+        .hidden-details {
+            margin-top: 30px;
+            text-align: left;
+        }
+        .hidden-details summary {
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+        .hidden-details ul {
+            list-style-type: none;
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .llm-feature {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            border-top: 1px solid #E0E0E0;
+            padding-top: 20px;
+        }
+
+        .llm-feature button {
+            background-color: #E8F5E9;
+            color: #4CAF50;
+            border: 2px solid #A5D6A7;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .llm-feature button:hover {
+            background-color: #DCE7D8;
+        }
+
+        .llm-feature .llm-output {
+            background-color: #F8F9FA;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .llm-feature .llm-output.show {
+            display: block;
+        }
+
+        .llm-feature .loading {
+            text-align: center;
+            font-style: italic;
+            color: var(--light-text-color);
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .controls {
+                flex-direction: column;
+            }
+            .results-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="quiz-title">Medical High-Yield Quiz</h1>
+        </header>
+
+        <div id="quiz-screen">
+            <div class="progress-bar-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <p id="progress-text" aria-live="polite">Question 1 of 10</p>
+            <div class="question-container">
+                <p id="question-text" class="question-text"></p>
+                <div id="options-container" class="options-container" role="radiogroup" aria-labelledby="question-text"></div>
+            </div>
+            <div id="feedback" class="feedback" aria-live="assertive"></div>
+            <div id="explanation-container" class="explanation-container">
+                <p id="explanation-text"></p>
+            </div>
+            <div class="controls">
+                <button id="prev-button" aria-label="Previous question" disabled>Previous</button>
+                <button id="next-button" aria-label="Next question" disabled>Next</button>
+            </div>
+
+            <div class="llm-feature">
+                <button id="generate-vignette-button">Generate Clinical Vignette ✨</button>
+                <div id="llm-output" class="llm-output"></div>
+            </div>
+        </div>
+
+        <div id="start-screen" class="start-screen">
+            <h2 class="quiz-title">Welcome!</h2>
+            <p>This interactive quiz covers key concepts from the provided document. Let's test your knowledge!</p>
+            <button id="start-quiz-button" class="start-button">Start Quiz</button>
+        </div>
+
+        <div id="results-screen" class="results-screen" style="display:none;">
+            <h2>Quiz Complete!</h2>
+            <p class="results-summary">Your final score is:</p>
+            <p id="final-score" class="results-score"></p>
+            <div class="results-buttons">
+                <button id="restart-button" class="restart-button">Restart Quiz</button>
+                <button id="review-button" class="restart-button">Review Answers</button>
+                <button id="export-json-button" class="restart-button">Export JSON</button>
+                <button id="export-csv-button" class="restart-button">Export CSV</button>
+                <button id="print-button" class="restart-button">Print Summary</button>
+            </div>
+        </div>
+
+        <div id="review-screen" class="review-screen" style="display:none;">
+            <h2>Review Your Answers</h2>
+            <ul id="review-list" class="review-list"></ul>
+            <button id="back-to-results-button" class="restart-button">Back to Results</button>
+        </div>
+
+        <div class="hidden-details">
+            <details>
+                <summary>Quiz Coverage Checklist</summary>
+                <div id="coverage-checklist"></div>
+            </details>
+        </div>
+    </div>
+
+    <script type="application/json" id="quiz-data">
+        {
+            "sections": [
+                {
+                    "title": "Infectious Disease",
+                    "questions": [
+                        {
+                            "id": "id-01",
+                            "question": "A patient presents with bloody diarrhea after consuming poultry. Which of the following organisms is the most likely cause?",
+                            "options": [
+                                "Escherichia coli (ETEC)",
+                                "Shigella",
+                                "Campylobacter jejuni",
+                                "Norovirus"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Bloody diarrhea following poultry consumption is a classic presentation for Campylobacter jejuni or Salmonella spp. ETEC typically causes watery diarrhea in travelers, and Norovirus is associated with outbreaks in close quarters.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-02",
+                            "question": "Which of the following is the first-line treatment for a patient diagnosed with C. difficile infection?",
+                            "options": [
+                                "Metronidazole",
+                                "Oral vancomycin or fidaxomicin",
+                                "Ceftriaxone",
+                                "Amoxicillin"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "According to the 2021 update, oral vancomycin or fidaxomicin are now the first-line treatments for C. difficile. Metronidazole is only used if the others are not available.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-03",
+                            "question": "A child presents with watery diarrhea and is under 5 years old. What is the most likely causative agent?",
+                            "options": [
+                                "Norovirus",
+                                "Yersinia enterocolitica",
+                                "Entamoeba histolytica",
+                                "Rotavirus"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "Rotavirus is the most common cause of watery diarrhea in children under 5 years of age. Norovirus is associated with close quarters, and Yersinia and Entamoeba cause bloody diarrhea.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-04",
+                            "question": "Which organism is most commonly associated with Guillain-Barré syndrome following a diarrheal illness?",
+                            "options": [
+                                "Shigella",
+                                "Salmonella",
+                                "Campylobacter",
+                                "Yersinia"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Campylobacter is the organism most commonly linked to the development of Guillain-Barré syndrome after a diarrheal illness.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-05",
+                            "question": "What is the gold standard diagnostic test for C. difficile?",
+                            "options": [
+                                "Stool culture",
+                                "Stool antigen + toxin PCR",
+                                "Colonoscopy",
+                                "Blood culture"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The recommended diagnostic method for C. difficile is a stool antigen + toxin PCR, not a stool culture.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-06",
+                            "question": "A patient with C. difficile infection develops fever of $104^{\\circ}F$ and abdominal distension. This clinical picture suggests which complication?",
+                            "options": [
+                                "Pseudomembranous colitis",
+                                "Toxic megacolon",
+                                "Perforation",
+                                "Sepsis"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "C. diff with a high fever and abdominal distension is a sign of toxic megacolon, which is a severe complication requiring a laparotomy.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-07",
+                            "question": "What is the most common cause of traveler's diarrhea?",
+                            "options": [
+                                "Campylobacter jejuni",
+                                "Shigella",
+                                "Entamoeba histolytica",
+                                "ETEC (Enterotoxigenic Escherichia coli)"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "ETEC is the most common cause of traveler's diarrhea, which is typically a self-limiting watery or brown/green diarrhea.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        },
+                        {
+                            "id": "id-08",
+                            "question": "Which organism is associated with bloody diarrhea and reactive arthritis in an adult?",
+                            "options": [
+                                "Entamoeba histolytica",
+                                "Rotavirus",
+                                "Norovirus",
+                                "Yersinia, Campylobacter, Shigella, or Salmonella"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "Yersinia, Campylobacter, Shigella, and Salmonella are all noted to cause bloody diarrhea and can be associated with reactive arthritis in adults.",
+                            "docRef": "Infectious Disease (Updated 2023)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Respiratory Infections",
+                    "questions": [
+                        {
+                            "id": "resp-01",
+                            "question": "A healthy, outpatient patient with no comorbidities is diagnosed with community-acquired pneumonia (CAP). Which of the following is a recommended first-line empiric treatment?",
+                            "options": [
+                                "Ceftriaxone",
+                                "Amoxicillin",
+                                "Levofloxacin",
+                                "Piperacillin-tazobactam"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "For an outpatient with CAP and no comorbidities, amoxicillin, doxycycline, or azithromycin are the recommended empiric treatments.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-02",
+                            "question": "A chest X-ray shows bilateral infiltrates in a patient with community-acquired pneumonia. What is the most likely causative organism?",
+                            "options": [
+                                "Strep pneumo",
+                                "Mycoplasma",
+                                "Staphylococcus aureus",
+                                "Francisella tularensis"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Bilateral infiltrates in CAP are a classic sign of Mycoplasma infection. Strep pneumo typically presents with a lobar pattern.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-03",
+                            "question": "A patient with cystic fibrosis (CF) who is 15 years old develops pneumonia. Which organism is the most likely cause?",
+                            "options": [
+                                "Staphylococcus aureus",
+                                "Haemophilus influenzae",
+                                "Pseudomonas aeruginosa",
+                                "Moraxella catarrhalis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "In patients with CF, Pseudomonas aeruginosa is the most common cause of pneumonia in those 10 years and older. S. aureus is more common in those younger than 10.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-04",
+                            "question": "A farmer presents with pneumonia and a history of exposure to cattle. Which organism should be considered?",
+                            "options": [
+                                "Chlamydia psittaci",
+                                "Francisella tularensis",
+                                "Coxiella burnetii",
+                                "Legionella pneumophila"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Exposure to cattle and subsequent pneumonia is associated with Coxiella burnetii, which causes Q fever. Birds are associated with Chlamydia psittaci and rabbits with Francisella tularensis.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-05",
+                            "question": "A patient with a lobar pattern on chest X-ray has a description that also includes 'interstitial' findings. What is the most likely organism?",
+                            "options": [
+                                "Strep pneumo",
+                                "Mycoplasma",
+                                "Staphylococcus aureus",
+                                "Klebsiella"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "While Strep pneumo typically causes a lobar pattern, the description 'interstitial' is a key clue for Mycoplasma pneumonia, as its appearance can be variable.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-06",
+                            "question": "A patient develops pneumonia after a recent influenza infection. Which organism is the most likely cause?",
+                            "options": [
+                                "Strep pneumo",
+                                "Mycoplasma",
+                                "Staphylococcus aureus",
+                                "Haemophilus influenzae"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Pneumonia following an influenza infection is classically caused by Staphylococcus aureus.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-07",
+                            "question": "A patient with community-acquired pneumonia has comorbidities. Which of the following is an appropriate empiric treatment regimen?",
+                            "options": [
+                                "Amoxicillin alone",
+                                "Azithromycin alone",
+                                "A β-lactam (e.g., amox/clav) + a macrolide (e.g., azithromycin)",
+                                "Metronidazole"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "For an outpatient with comorbidities, empiric treatment for CAP should be a combination of a β-lactam and a macrolide or doxycycline, or fluoroquinolone monotherapy.",
+                            "docRef": "Respiratory Infections"
+                        },
+                        {
+                            "id": "resp-08",
+                            "question": "Which antibiotic is the preferred treatment for aspiration pneumonia?",
+                            "options": [
+                                "Azithromycin",
+                                "Ceftriaxone",
+                                "Clindamycin",
+                                "Piperacillin-tazobactam"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Aspiration pneumonia is often caused by anaerobes from the oral flora, and clindamycin is the classic treatment for anaerobes above the diaphragm.",
+                            "docRef": "Infections (Pulmonary)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Sepsis & Meningitis",
+                    "questions": [
+                        {
+                            "id": "sepsis-01",
+                            "question": "What is the preferred empiric antibiotic combination for sepsis in most cases?",
+                            "options": [
+                                "Ceftriaxone",
+                                "Vancomycin + ceftriaxone",
+                                "Vancomycin + piperacillin-tazobactam",
+                                "Levofloxacin"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The preferred empiric broad-spectrum antibiotic for sepsis is often vancomycin plus piperacillin-tazobactam, covering a wide range of common pathogens.",
+                            "docRef": "Sepsis"
+                        },
+                        {
+                            "id": "sepsis-02",
+                            "question": "A patient with cirrhosis, fever, and abdominal pain is suspected of having spontaneous bacterial peritonitis (SBP). What is the diagnostic finding on paracentesis?",
+                            "options": [
+                                "WBC count > 50,000 cells/µL",
+                                "A positive Gram stain",
+                                "A PMN count ≥ 250 cells/µL",
+                                "Low protein and high glucose"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Spontaneous bacterial peritonitis is diagnosed by a paracentesis with a polymorphonuclear (PMN) count of 250 cells/µL or greater.",
+                            "docRef": "Sepsis"
+                        },
+                        {
+                            "id": "sepsis-03",
+                            "question": "Which of the following CSF findings is most consistent with bacterial meningitis?",
+                            "options": [
+                                "Normal glucose, normal protein, lymphocytes",
+                                "Low glucose, high protein, high PMNs",
+                                "High glucose, low protein, high lymphocytes",
+                                "Normal glucose, high protein, normal WBCs"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Bacterial meningitis typically presents with low glucose, high protein, and a high count of polymorphonuclear (PMN) cells in the CSF.",
+                            "docRef": "Meningitis"
+                        },
+                        {
+                            "id": "sepsis-04",
+                            "question": "In a patient with suspected meningitis and no risk factors for increased intracranial pressure (ICP), what is the correct workup sequence?",
+                            "options": [
+                                "Start antibiotics immediately",
+                                "Perform a CT head, then an LP",
+                                "Perform a lumbar puncture (LP) before antibiotics",
+                                "Perform an LP after a CT head"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "If there are no risk factors for increased intracranial pressure (like confusion, seizures, or papilledema), a lumbar puncture should be performed before starting antibiotics.",
+                            "docRef": "Meningitis"
+                        },
+                        {
+                            "id": "sepsis-05",
+                            "question": "Which of the following CSF findings is most consistent with viral meningitis?",
+                            "options": [
+                                "Low glucose, high protein, high PMNs",
+                                "Normal glucose, high protein, lymphocytes",
+                                "Low glucose, normal protein, high PMNs",
+                                "Normal glucose, normal WBCs, high protein"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Viral meningitis is typically characterized by a normal glucose level, a normal or slightly increased protein level, and a lymphocyte predominance.",
+                            "docRef": "Meningitis"
+                        },
+                        {
+                            "id": "sepsis-06",
+                            "question": "In an adult patient over 50 years old with suspected bacterial meningitis, what should be added to the empiric treatment of ceftriaxone and vancomycin?",
+                            "options": [
+                                "Metronidazole",
+                                "Ampicillin",
+                                "Ciprofloxacin",
+                                "Doxycycline"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Ampicillin should be added to the empiric meningitis regimen for patients over 50 years old or those who are immunocompromised to cover for Listeria.",
+                            "docRef": "Meningitis"
+                        }
+                    ]
+                },
+                {
+                    "title": "Cardiology",
+                    "questions": [
+                        {
+                            "id": "cardio-01",
+                            "question": "A patient with stable angina has an abnormal baseline ECG. Which stress test is the most appropriate first-line choice?",
+                            "options": [
+                                "ECG stress test",
+                                "Treadmill stress test",
+                                "Pharmacologic nuclear test",
+                                "Echo stress test (dobutamine or exercise)"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "When a patient has an abnormal baseline ECG, an echo stress test is used to evaluate for ischemia since the ECG changes would not be reliable for diagnosis. Dobutamine is used if the patient cannot exercise.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-02",
+                            "question": "A patient presents with chest pain that is worse when lying down and better when leaning forward. The ECG shows diffuse ST-segment elevations. What is the most likely diagnosis?",
+                            "options": [
+                                "Acute MI",
+                                "Pericarditis",
+                                "Pericardial tamponade",
+                                "Pulmonary embolism"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "These are the classic signs and symptoms of pericarditis. The pain is positional and the ECG shows diffuse ST-segment elevations.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-03",
+                            "question": "What is Beck's triad, which is a key sign of cardiac tamponade?",
+                            "options": [
+                                "Hypotension, muffled heart sounds, JVD",
+                                "Hypotension, pulsus paradoxus, JVD",
+                                "Hypotension, pulsus paradoxus, muffled heart sounds",
+                                "Hypotension, widened pulse pressure, JVD"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Beck's triad consists of hypotension, muffled heart sounds, and jugular venous distension (JVD).",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-04",
+                            "question": "A patient is diagnosed with hypertrophic cardiomyopathy (HOCM). Which of the following maneuvers would make the murmur louder?",
+                            "options": [
+                                "Valsalva maneuver",
+                                "Squatting",
+                                "Handgrip",
+                                "Leaning forward"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "The murmur of HOCM is louder with a Valsalva maneuver, which decreases preload. It gets softer with squatting or handgrip.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-05",
+                            "question": "A continuous, machinery-like murmur is heard in a newborn. This is a classic finding for which congenital heart defect?",
+                            "options": [
+                                "Atrial septal defect (ASD)",
+                                "Ventricular septal defect (VSD)",
+                                "Patent ductus arteriosus (PDA)",
+                                "Tetralogy of Fallot"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "A patent ductus arteriosus (PDA) is characterized by a continuous, machinery-like murmur.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-06",
+                            "question": "A patient presents with a mid-systolic click. What is the most likely diagnosis?",
+                            "options": [
+                                "Aortic stenosis",
+                                "Mitral regurgitation",
+                                "Mitral valve prolapse",
+                                "Mitral stenosis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "A mid-systolic click is the classic auscultatory finding for mitral valve prolapse.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-07",
+                            "question": "A 25-year-old male athlete suddenly collapses and dies during a basketball game. What is the most common cause of sudden death in athletes?",
+                            "options": [
+                                "Dilated cardiomyopathy",
+                                "Myocarditis",
+                                "Restrictive cardiomyopathy",
+                                "Hypertrophic cardiomyopathy (HCM)"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "Hypertrophic cardiomyopathy (HCM) is the most common cause of sudden cardiac death in young athletes.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-08",
+                            "question": "A fixed splitting of S2 is a classic finding for which congenital heart defect?",
+                            "options": [
+                                "VSD",
+                                "ASD",
+                                "PDA",
+                                "Tetralogy of Fallot"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "A fixed splitting of the second heart sound (S2) is a classic physical exam finding for an atrial septal defect (ASD).",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-09",
+                            "question": "A patient presents with ST depressions in leads V1-V4. This finding is suggestive of which type of myocardial infarction?",
+                            "options": [
+                                "Anterior MI",
+                                "Inferior MI",
+                                "Lateral MI",
+                                "Posterior MI"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "ST depressions in the anterior leads (V1-V4) are a classic reciprocal change for a posterior wall myocardial infarction.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-10",
+                            "question": "A patient with acute coronary syndrome (ACS) is found to have a STEMI. What is the primary treatment modality?",
+                            "options": [
+                                "NSAIDs",
+                                "Reperfusion therapy",
+                                "Beta-blocker monotherapy",
+                                "Statin alone"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Reperfusion therapy (either PCI or fibrinolysis) is the primary treatment for STEMI to restore blood flow to the heart muscle.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-11",
+                            "question": "A patient with Marfan syndrome presents with bounding pulses and a wide pulse pressure. What valvular disease is most likely?",
+                            "options": [
+                                "Aortic stenosis",
+                                "Aortic regurgitation",
+                                "Mitral stenosis",
+                                "Mitral valve prolapse"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Bounding pulses and a wide pulse pressure are classic signs of aortic regurgitation (AR). AR is associated with connective tissue disorders like Marfan syndrome.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-12",
+                            "question": "An opening snap followed by a diastolic rumble is characteristic of which valvular lesion?",
+                            "options": [
+                                "Mitral regurgitation",
+                                "Mitral stenosis",
+                                "Aortic stenosis",
+                                "Tricuspid regurgitation"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The opening snap and diastolic rumble are the classic auscultatory findings for mitral stenosis, which is a late complication of rheumatic fever.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-13",
+                            "question": "A patient presents with an unstable wide-complex tachycardia. What is the most appropriate initial treatment?",
+                            "options": [
+                                "Adenosine",
+                                "Amiodarone",
+                                "Synchronized cardioversion",
+                                "Vagal maneuvers"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "For an unstable tachycardia (wide or narrow), the patient requires immediate synchronized cardioversion.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-14",
+                            "question": "A patient's ECG shows progressive PR prolongation followed by a dropped QRS complex. This arrhythmia is known as Mobitz I. What is its characteristic feature?",
+                            "options": [
+                                "A dropped QRS without a progressive PR",
+                                "AV dissociation",
+                                "Progressive PR prolongation leading to a dropped beat",
+                                "Fixed PR prolongation >200ms"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Mobitz I (Wenckebach) is characterized by a progressive prolongation of the PR interval until a QRS complex is dropped. Mobitz II has a dropped QRS without progressive PR prolongation.",
+                            "docRef": "Cardiology (Updated 2023)"
+                        },
+                        {
+                            "id": "cardio-15",
+                            "question": "Which type of influenza vaccine is safe to use in a pregnant patient?",
+                            "options": [
+                                "Live intranasal vaccine",
+                                "Live attenuated vaccine",
+                                "IM killed vaccine",
+                                "Recombinant vaccine"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The annual intramuscular (IM) killed influenza vaccine is safe for use in pregnancy. Live vaccines are generally contraindicated in pregnant women.",
+                            "docRef": "Vaccination (Cardio relevance)"
+                        },
+                        {
+                            "id": "cardio-16",
+                            "question": "What is the classic cardiac anomaly associated with Williams syndrome?",
+                            "options": [
+                                "Tetralogy of Fallot",
+                                "Coarctation of the aorta",
+                                "Supravalvular aortic stenosis",
+                                "Bicuspid aortic valve"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Williams syndrome is associated with supravalvular aortic stenosis. Coarctation is seen with Turner syndrome, and bicuspid aortic valve is the most common congenital heart defect.",
+                            "docRef": "Congenital & Structural Heart Disease"
+                        }
+                    ]
+                },
+                {
+                    "title": "Pulmonology",
+                    "questions": [
+                        {
+                            "id": "pulm-01",
+                            "question": "According to GINA 2023 guidelines, what is the preferred first-line reliever and controller therapy for a patient with asthma?",
+                            "options": [
+                                "SABA alone",
+                                "Low-dose ICS daily",
+                                "ICS-formoterol",
+                                "High-dose ICS/LABA"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The 2023 GINA guidelines prefer ICS-formoterol as both a reliever and a controller. SABA alone is no longer considered first-line.",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-02",
+                            "question": "A patient with a history of asthma, aspirin sensitivity, and nasal polyps presents with worsening symptoms. This is known as what triad?",
+                            "options": [
+                                "Samter triad",
+                                "Beck's triad",
+                                "Whipple triad",
+                                "Charcot triad"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "The combination of asthma, aspirin sensitivity, and nasal polyps is known as Samter triad or Aspirin-Exacerbated Respiratory Disease (AERD).",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-03",
+                            "question": "In a patient with a sudden onset of dyspnea, pleuritic chest pain, and hypoxemia, what is the gold standard diagnostic test for pulmonary embolism (PE) if the patient is stable?",
+                            "options": [
+                                "Chest X-ray",
+                                "Spiral CT angiography",
+                                "V/Q scan",
+                                "D-dimer test"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "For a stable patient with suspected PE, the gold standard diagnostic test is a spiral CT angiography. A V/Q scan is used for pregnant patients, and a D-dimer is a screening test.",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-04",
+                            "question": "What is the primary treatment for a patient with Acute Respiratory Distress Syndrome (ARDS)?",
+                            "options": [
+                                "High tidal volume ventilation",
+                                "Low tidal volume mechanical ventilation",
+                                "High PEEP and low tidal volume",
+                                "High PEEP and high tidal volume"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The primary treatment for ARDS is low tidal volume mechanical ventilation (6 mL/kg) and high PEEP (Positive End-Expiratory Pressure).",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-05",
+                            "question": "A patient presents with chronic productive cough and foul sputum. What is the most likely diagnosis?",
+                            "options": [
+                                "Asthma",
+                                "COPD",
+                                "Bronchiectasis",
+                                "Pneumonia"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Chronic productive cough and foul sputum are classic signs of bronchiectasis, which is a chronic inflammatory condition of the airways.",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-06",
+                            "question": "A patient with an acute asthma attack presents with a normal $pCO_2$ despite low $O_2$ saturation. What does this indicate?",
+                            "options": [
+                                "The patient is improving and can be discharged.",
+                                "The patient is hyperventilating.",
+                                "The patient is experiencing impending respiratory failure.",
+                                "The patient has a normal acid-base balance."
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "An acute asthma attack typically presents with respiratory alkalosis (low $pCO_2$). A normal or rising $pCO_2$ in this setting indicates muscle fatigue and impending respiratory failure.",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-07",
+                            "question": "In a patient with suspected pulmonary embolism (PE) and high clinical suspicion, what is the exam-relevant management step to be taken before confirming with a CT?",
+                            "options": [
+                                "Start IV fluids",
+                                "Administer tPA",
+                                "Start anticoagulation (Heparin)",
+                                "Order a chest X-ray"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "If there is high suspicion for PE, the exam answer is to start anticoagulation (e.g., heparin) before confirming with a spiral CT angiography.",
+                            "docRef": "Pulmonology (Updated 2023)"
+                        },
+                        {
+                            "id": "pulm-08",
+                            "question": "A patient with a history of exposure to asbestos presents with pleural plaques on imaging. What long-term complication is he at an increased risk for?",
+                            "options": [
+                                "Tuberculosis",
+                                "COPD",
+                                "Mesothelioma",
+                                "Sarcoidosis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Asbestosis is characterized by pleural plaques and a significantly increased risk for mesothelioma.",
+                            "docRef": "Occupational & Environmental Lung Disease"
+                        },
+                        {
+                            "id": "pulm-09",
+                            "question": "A patient presents with fever, ear pain, and a red, swollen external ear canal. The diagnosis of otitis externa is made. Which organism is the most likely cause?",
+                            "options": [
+                                "S. aureus",
+                                "Pseudomonas",
+                                "S. pneumo",
+                                "H. flu"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Otitis externa is most commonly caused by Pseudomonas. The treatment is typically topical ciprofloxacin.",
+                            "docRef": "Infections (Pulmonary)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Renal & Electrolytes",
+                    "questions": [
+                        {
+                            "id": "renal-01",
+                            "question": "A patient with rhabdomyolysis has a urinalysis that is positive for blood, but no red blood cells are seen on microscopy. What is the substance responsible for this finding?",
+                            "options": [
+                                "Hemoglobin",
+                                "Myoglobin",
+                                "Bilirubin",
+                                "Casts"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "In rhabdomyolysis, myoglobinuria causes the dipstick to be positive for blood, even though no red blood cells are present on microscopy.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-02",
+                            "question": "A patient is found to have acute kidney injury with a BUN/Cr ratio greater than 20 and a FeNa less than 1%. What type of AKI is this?",
+                            "options": [
+                                "Prerenal",
+                                "Intrinsic (ATN)",
+                                "Postrenal",
+                                "Chronic kidney disease"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "A BUN/Cr ratio >20 and a fractional excretion of sodium (FeNa) <1% are classic indicators of prerenal acute kidney injury.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-03",
+                            "question": "A patient with diabetes mellitus and a history of NSAID use presents with red urine due to renal papillary necrosis. This is a classic complication for which of the following?",
+                            "options": [
+                                "Sickle cell trait",
+                                "Sickle cell disease",
+                                "NSAID use",
+                                "Pyelonephritis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "While all the options can be associated with renal papillary necrosis, NSAID use is specifically highlighted as a common cause.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-04",
+                            "question": "Which of the following is an indication for initiating dialysis in a patient with renal failure?",
+                            "options": [
+                                "Asymptomatic hyperkalemia",
+                                "Mild metabolic acidosis",
+                                "Uremia with pericarditis",
+                                "Anuria"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The AEIOU mnemonic for dialysis indications includes A (acidosis), E (electrolytes), I (ingestion), O (overload), and U (uremia). Uremia with pericarditis is a clear indication for dialysis.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-05",
+                            "question": "A patient with hypocalcemia is not responding to calcium replacement therapy. What is the next step in the workup?",
+                            "options": [
+                                "Increase the dose of calcium",
+                                "Check serum magnesium level",
+                                "Order a DEXA scan",
+                                "Check for renal failure"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "If hypocalcemia is refractory to treatment, you must check the magnesium level, as hypomagnesemia can cause refractory hypokalemia and hypocalcemia.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-06",
+                            "question": "Which nephrotic syndrome is classically associated with HIV, sickle cell disease, and obesity?",
+                            "options": [
+                                "Minimal change disease",
+                                "Membranous nephropathy",
+                                "Focal segmental glomerulosclerosis (FSGS)",
+                                "Poststreptococcal glomerulonephritis (PSGN)"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Focal segmental glomerulosclerosis (FSGS) is the nephrotic syndrome commonly associated with HIV, sickle cell, and obesity.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-07",
+                            "question": "Which medication is associated with nephrogenic diabetes insipidus?",
+                            "options": [
+                                "Lithium",
+                                "NSAIDs",
+                                "Cisplatin",
+                                "Aminoglycosides"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Lithium is a classic cause of nephrogenic diabetes insipidus by impairing the action of ADH on the collecting ducts.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        },
+                        {
+                            "id": "renal-08",
+                            "question": "A patient presents with hematuria 3 days after an upper respiratory infection. What is the most likely diagnosis?",
+                            "options": [
+                                "Poststreptococcal glomerulonephritis (PSGN)",
+                                "IgA nephropathy",
+                                "Minimal change disease",
+                                "Membranoproliferative glomerulonephritis"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Hematuria that occurs within 5 days of an URI is characteristic of IgA nephropathy. PSGN typically presents 2-4 weeks after a strep infection.",
+                            "docRef": "Renal & Electrolytes (Updated 2023)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Neurology",
+                    "questions": [
+                        {
+                            "id": "neuro-01",
+                            "question": "A patient presents with a history of recent diarrheal illness, followed by progressive ascending weakness and areflexia. What is the most likely diagnosis?",
+                            "options": [
+                                "Multiple sclerosis",
+                                "Myasthenia gravis",
+                                "Guillain-Barré Syndrome",
+                                "Lambert-Eaton myasthenic syndrome"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Guillain-Barré Syndrome (GBS) is an ascending paralysis that is often preceded by an infection, particularly with Campylobacter jejuni.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-02",
+                            "question": "Which of the following CSF findings is classic for Guillain-Barré Syndrome?",
+                            "options": [
+                                "Albuminocytologic dissociation (↑protein, normal WBC)",
+                                "Low glucose, high protein, high PMNs",
+                                "Oligoclonal bands",
+                                "Normal protein, high WBC"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "The classic CSF finding for GBS is albuminocytologic dissociation, which is an elevated protein level with a normal white blood cell count.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-03",
+                            "question": "A patient with a history of chronic alcohol abuse presents with ataxia, ophthalmoplegia, and confusion. What is the most likely diagnosis?",
+                            "options": [
+                                "Korsakoff syndrome",
+                                "Wernicke encephalopathy",
+                                "Alzheimer's disease",
+                                "Lewy body dementia"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The triad of ataxia, ophthalmoplegia, and confusion is characteristic of Wernicke encephalopathy due to thiamine (B1) deficiency.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-04",
+                            "question": "A patient with multiple sclerosis (MS) is experiencing an acute flare. What is the first-line treatment for an acute flare?",
+                            "options": [
+                                "Oral prednisone",
+                                "Intravenous methylprednisolone",
+                                "Interferon-β",
+                                "Glatiramer acetate"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Acute flares of MS are treated with high-dose intravenous methylprednisolone. Disease-modifying therapies like interferon-β are for long-term management.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-05",
+                            "question": "What is the classic triad for Normal Pressure Hydrocephalus (NPH)?",
+                            "options": [
+                                "Confusion, memory loss, headache",
+                                "Wet (incontinence), Wobbly (gait), Wacky (cognitive)",
+                                "Ataxia, ophthalmoplegia, confusion",
+                                "Headache, nausea, papilledema"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The classic triad for NPH is often remembered as 'Wet, Wobbly, and Wacky,' referring to urinary incontinence, gait disturbance, and cognitive dysfunction.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-06",
+                            "question": "A patient presents with saddle anesthesia, urinary retention, and fecal incontinence. What is the most likely diagnosis?",
+                            "options": [
+                                "Conus medullaris syndrome",
+                                "Cauda equina syndrome",
+                                "Lumbar spinal stenosis",
+                                "Disc herniation"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Saddle anesthesia and incontinence are the key features of cauda equina syndrome, a medical emergency requiring urgent decompression.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-07",
+                            "question": "A patient has a midshaft humerus fracture. Which peripheral nerve is most at risk for injury?",
+                            "options": [
+                                "Median nerve",
+                                "Ulnar nerve",
+                                "Axillary nerve",
+                                "Radial nerve"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "The radial nerve wraps around the midshaft of the humerus, making it susceptible to injury from a fracture in this area. This often presents as wrist drop.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-08",
+                            "question": "Which type of headache and back pain is relieved by leaning forward (e.g., shopping cart sign)?",
+                            "options": [
+                                "Disc herniation",
+                                "Lumbosacral strain",
+                                "Spinal stenosis",
+                                "Ankylosing spondylitis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Lumbar spinal stenosis causes pain that is worse with standing and walking but is relieved by leaning forward, a classic sign often seen in patients using a shopping cart.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-09",
+                            "question": "A patient presents to the emergency department with a first-time seizure. Which of the following is an essential part of the initial workup?",
+                            "options": [
+                                "EEG",
+                                "MRI",
+                                "Electrolytes and glucose",
+                                "Lumbar puncture"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "For a first-time seizure, it's crucial to rule out metabolic causes, so checking electrolytes and glucose is an essential part of the initial workup.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-10",
+                            "question": "A patient is in status epilepticus. What is the first-line treatment?",
+                            "options": [
+                                "IV phenytoin",
+                                "IV levetiracetam",
+                                "IV lorazepam",
+                                "Oral valproic acid"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The initial treatment for status epilepticus is a benzodiazepine, such as IV lorazepam, to stop the seizure activity.",
+                            "docRef": "Neurology (Updated 2023)"
+                        },
+                        {
+                            "id": "neuro-11",
+                            "question": "Which of the following is an absolute contraindication to using tPA in a patient with an ischemic stroke?",
+                            "options": [
+                                "BP of 160/90",
+                                "Diabetes mellitus",
+                                "Recent major surgery",
+                                "Smoking history"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "A recent bleed or surgery is an absolute contraindication to giving tPA due to the high risk of hemorrhage.",
+                            "docRef": "Neurology (Updated 2023)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Endocrinology",
+                    "questions": [
+                        {
+                            "id": "endo-01",
+                            "question": "What is the first-line treatment for a patient newly diagnosed with Type 2 Diabetes Mellitus?",
+                            "options": [
+                                "Insulin",
+                                "Metformin",
+                                "GLP-1 agonist (semaglutide)",
+                                "Sulfonylureas"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Unless contraindicated, metformin is the first-line treatment for Type 2 Diabetes Mellitus due to its efficacy and safety profile.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-02",
+                            "question": "A patient presents with signs of hyperthyroidism, but their radioactive iodine uptake scan shows patchy uptake. What is the most likely cause?",
+                            "options": [
+                                "Graves' disease",
+                                "Toxic multinodular goiter",
+                                "Hashimoto's thyroiditis",
+                                "Subacute thyroiditis"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Toxic multinodular goiter is characterized by patchy radioactive iodine uptake. Graves' disease shows diffuse uptake.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-03",
+                            "question": "A patient with primary hyperparathyroidism is likely to present with which of the following symptoms?",
+                            "options": [
+                                "Tetany and muscle cramps",
+                                "Hyperreflexia and paresthesias",
+                                "Stones, bones, groans, and psychiatric overtones",
+                                "Hypotension and tachycardia"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The classic presentation of primary hyperparathyroidism is 'stones, bones, groans, and psychiatric overtones,' representing kidney stones, bone pain, GI symptoms, and mental changes due to hypercalcemia.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-04",
+                            "question": "Which of the following is a classic finding in a patient with Pheochromocytoma?",
+                            "options": [
+                                "Hypertension, hypokalemia, and metabolic alkalosis",
+                                "Episodic headache, palpitations, and sweating",
+                                "Moon facies, central obesity, and striae",
+                                "Weight loss, heat intolerance, and exophthalmos"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The triad of episodic headache, palpitations, and sweating in the context of hypertension is highly suggestive of a pheochromocytoma.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-05",
+                            "question": "A patient with a history of sarcoidosis develops hypercalcemia. What is the most likely mechanism?",
+                            "options": [
+                                "PTHrP production by tumor cells",
+                                "Increased production of PTH",
+                                "Increased 1-α hydroxylase activity in macrophages",
+                                "Renal failure"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "In sarcoidosis, hypercalcemia is due to the increased activity of 1-α hydroxylase in macrophages, which leads to increased conversion of vitamin D to its active form.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-06",
+                            "question": "Which of the following is associated with the classic triad of a pituitary adenoma, a pancreatic tumor, and hyperparathyroidism?",
+                            "options": [
+                                "MEN1",
+                                "MEN2A",
+                                "MEN2B",
+                                "Von Hippel-Lindau"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "The triad of pituitary, pancreatic, and parathyroid tumors is characteristic of Multiple Endocrine Neoplasia type 1 (MEN1).",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-07",
+                            "question": "A young patient is diagnosed with medullary thyroid cancer and a pheochromocytoma. What is the most likely associated condition?",
+                            "options": [
+                                "MEN1",
+                                "MEN2A",
+                                "MEN2B",
+                                "Cowden syndrome"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Medullary thyroid cancer, pheochromocytoma, and primary hyperparathyroidism are the classic features of Multiple Endocrine Neoplasia type 2A (MEN2A). MEN2B has mucosal neuromas instead of hyperparathyroidism.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-08",
+                            "question": "Which thyroid cancer is most common and is characterized by 'Orphan Annie eye' nuclei and psammoma bodies?",
+                            "options": [
+                                "Follicular",
+                                "Papillary",
+                                "Medullary",
+                                "Anaplastic"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Papillary thyroid cancer is the most common type and is characterized by psammoma bodies and 'Orphan Annie eye' nuclei.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "endo-09",
+                            "question": "Which of the following is a long-term risk associated with Polycystic Ovary Syndrome (PCOS)?",
+                            "options": [
+                                "Ovarian cancer",
+                                "Endometrial cancer",
+                                "Cervical cancer",
+                                "Breast cancer"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The unopposed estrogen from chronic anovulation in PCOS increases the risk for endometrial hyperplasia and subsequent endometrial cancer.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Hematology & Oncology",
+                    "questions": [
+                        {
+                            "id": "heme-01",
+                            "question": "A patient with a microcytic anemia has normal iron studies. Which of the following is the most likely diagnosis?",
+                            "options": [
+                                "Iron deficiency anemia",
+                                "Anemia of chronic disease",
+                                "Thalassemia",
+                                "Sideroblastic anemia"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Thalassemia is a microcytic anemia that is not caused by iron deficiency, so iron studies will be normal. The diagnosis is confirmed with hemoglobin electrophoresis.",
+                            "docRef": "Hematology & Oncology (Updated 2023)"
+                        },
+                        {
+                            "id": "heme-02",
+                            "question": "A young child presents with a jaw lesion and an abdominal mass. The biopsy shows a t(8;14) translocation. What is the most likely diagnosis?",
+                            "options": [
+                                "Hodgkin lymphoma",
+                                "Follicular lymphoma",
+                                "Burkitt lymphoma",
+                                "Multiple myeloma"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The t(8;14) translocation (c-MYC) and presentation with a jaw lesion (endemic form) or abdominal mass (sporadic form) are classic for Burkitt lymphoma.",
+                            "docRef": "Hematology & Oncology (Updated 2023)"
+                        },
+                        {
+                            "id": "heme-03",
+                            "question": "A patient with multiple myeloma presents with symptoms. Which of the following is NOT part of the classic CRAB mnemonic?",
+                            "options": [
+                                "HyperCalcemia",
+                                "Hyperglycemia",
+                                "Anemia",
+                                "Bone lytic lesions"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The CRAB mnemonic for multiple myeloma stands for HyperCalcemia, Renal failure, Anemia, and Bone lytic lesions. Hyperglycemia is not a classic feature.",
+                            "docRef": "Hematology & Oncology (Updated 2023)"
+                        },
+                        {
+                            "id": "heme-04",
+                            "question": "What is the most common cause of osteomyelitis in patients with sickle cell disease?",
+                            "options": [
+                                "Staphylococcus aureus",
+                                "Streptococcus pneumoniae",
+                                "Salmonella",
+                                "Pseudomonas aeruginosa"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "While S. aureus is the most common cause of osteomyelitis in the general population, Salmonella is the most common in patients with sickle cell disease.",
+                            "docRef": "Musculoskeletal, Orthopedics & Trauma (Updated 2023)"
+                        },
+                        {
+                            "id": "heme-05",
+                            "question": "A patient presents with prolonged bleeding after a minor cut. Labs show an elevated aPTT, normal PT, and a normal bleeding time. What is the most likely diagnosis?",
+                            "options": [
+                                "Hemophilia A",
+                                "von Willebrand disease",
+                                "Vitamin K deficiency",
+                                "ITP"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "An isolated increase in aPTT with a normal PT and bleeding time is characteristic of Hemophilia A (Factor VIII deficiency) or Hemophilia B (Factor IX deficiency).",
+                            "docRef": "Hematology & Oncology (Updated 2023)"
+                        },
+                        {
+                            "id": "heme-06",
+                            "question": "What is the most common cause of polycythemia in a patient with renal cell carcinoma (RCC)?",
+                            "options": [
+                                "Hyperplasia of the bone marrow",
+                                "Increased erythropoietin (EPO) production by the tumor",
+                                "Decreased destruction of red blood cells",
+                                "SGLT2 inhibitor use"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Renal cell carcinoma can produce erythropoietin (EPO), leading to secondary polycythemia.",
+                            "docRef": "Oncology Key Associations"
+                        },
+                        {
+                            "id": "heme-07",
+                            "question": "A patient with chronic myeloid leukemia (CML) is found to have a t(9;22) translocation. This mutation results in which of the following?",
+                            "options": [
+                                "C-MYC overexpression",
+                                "Anaplastic lymphoma kinase (ALK) fusion gene",
+                                "BCR-ABL tyrosine kinase",
+                                "Cyclin D1 overexpression"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The t(9;22) translocation, known as the Philadelphia chromosome, creates the BCR-ABL tyrosine kinase fusion protein, which is the target for imatinib.",
+                            "docRef": "Leukemias & Lymphomas"
+                        },
+                        {
+                            "id": "heme-08",
+                            "question": "A patient with a recent viral infection develops petechiae and bleeding gums. Labs show isolated thrombocytopenia with a normal PT and aPTT. What is the most likely diagnosis?",
+                            "options": [
+                                "Hemophilia",
+                                "Von Willebrand disease",
+                                "ITP (Immune Thrombocytopenia)",
+                                "DIC"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Immune thrombocytopenia (ITP) is an autoimmune disorder characterized by isolated thrombocytopenia with a normal PT and aPTT. It often follows a viral illness and is treated with steroids.",
+                            "docRef": "Bleeding Disorders"
+                        },
+                        {
+                            "id": "heme-09",
+                            "question": "Which of the following describes the key lab findings for anemia of chronic disease (ACD)?",
+                            "options": [
+                                "Low iron, low ferritin, high TIBC",
+                                "Low iron, high ferritin, low TIBC",
+                                "High iron, high ferritin, low TIBC",
+                                "Low iron, low ferritin, low TIBC"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "In ACD, inflammatory cytokines trap iron in macrophages, leading to low serum iron and TIBC, but high ferritin (as iron is stored).",
+                            "docRef": "Anemias"
+                        },
+                        {
+                            "id": "heme-10",
+                            "question": "What is the primary treatment for a patient with polycythemia vera?",
+                            "options": [
+                                "IV iron",
+                                "Erythropoietin injections",
+                                "Phlebotomy",
+                                "Vitamin B12"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The primary treatment for polycythemia vera, a myeloproliferative disorder leading to increased red blood cell mass, is phlebotomy to reduce the red blood cell count.",
+                            "docRef": "Myeloproliferative & Plasma Cell Disorders"
+                        }
+                    ]
+                },
+                {
+                    "title": "Gastroenterology & Hepatology",
+                    "questions": [
+                        {
+                            "id": "gi-01",
+                            "question": "A barium swallow shows a 'bird's beak' appearance in a patient with dysphagia. What is the most likely diagnosis?",
+                            "options": [
+                                "GERD",
+                                "Esophageal varices",
+                                "Esophageal cancer",
+                                "Achalasia"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "The 'bird's beak' sign on a barium swallow is a classic finding for achalasia, which is caused by the failure of the lower esophageal sphincter to relax.",
+                            "docRef": "Gastroenterology & Hepatology (Updated 2023)"
+                        },
+                        {
+                            "id": "gi-02",
+                            "question": "Which of the following is the gold standard for diagnosing celiac disease?",
+                            "options": [
+                                "Anti-TTG antibodies",
+                                "Anti-endomysial antibodies",
+                                "Duodenal biopsy showing villous atrophy",
+                                "Genetic testing for HLA-DQ2/DQ8"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "While serologic tests are used for screening, the gold standard for diagnosing celiac disease is a duodenal biopsy that shows villous atrophy.",
+                            "docRef": "Gastroenterology & Hepatology (Updated 2023)"
+                        },
+                        {
+                            "id": "gi-03",
+                            "question": "A patient with cirrhosis, ascites, fever, and abdominal pain is suspected of having SBP. What is the most appropriate first-line treatment?",
+                            "options": [
+                                "IV fluids",
+                                "Spironolactone",
+                                "Ceftriaxone",
+                                "Paracentesis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Spontaneous bacterial peritonitis (SBP) is a life-threatening infection that requires immediate treatment with antibiotics, with ceftriaxone being the first-line choice.",
+                            "docRef": "Gastroenterology & Hepatology (Updated 2023)"
+                        },
+                        {
+                            "id": "gi-04",
+                            "question": "What is the most common cause of chronic pancreatitis?",
+                            "options": [
+                                "Gallstones",
+                                "Hypertriglyceridemia",
+                                "Cystic fibrosis",
+                                "Alcohol abuse"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "Alcohol abuse is the most common cause of chronic pancreatitis in adults.",
+                            "docRef": "Gastroenterology & Hepatology (Updated 2023)"
+                        },
+                        {
+                            "id": "gi-05",
+                            "question": "Which of the following is associated with a bronze skin pigmentation, diabetes mellitus, and cirrhosis?",
+                            "options": [
+                                "Wilson disease",
+                                "Alpha-1 antitrypsin deficiency",
+                                "Hemochromatosis",
+                                "Autoimmune hepatitis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The triad of 'bronze diabetes' (skin pigmentation, diabetes, and cirrhosis) is a classic finding in hemochromatosis, a disorder of iron overload.",
+                            "docRef": "Gastroenterology & Hepatology (Updated 2023)"
+                        },
+                        {
+                            "id": "gi-06",
+                            "question": "A patient with GERD presents with dysphagia and weight loss. What is the most appropriate next step in management?",
+                            "options": [
+                                "Increase PPI dose",
+                                "Start H2 blocker",
+                                "Refer for endoscopy",
+                                "Reassure and observe"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Dysphagia and weight loss are 'alarm symptoms' in GERD that warrant an urgent endoscopy to rule out complications like esophageal cancer.",
+                            "docRef": "Gastroenterology & Hepatology (Updated 2023)"
+                        },
+                        {
+                            "id": "gi-07",
+                            "question": "A patient with ulcerative colitis (UC) has a sudden increase in bloody diarrhea and fever. Which biologic agent is a good choice for severe, refractory cases?",
+                            "options": [
+                                "Mesalamine",
+                                "Budesonide",
+                                "Anti-TNF agents (e.g., infliximab)",
+                                "Sulfasalazine"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Biologics like anti-TNF agents are used for severe or refractory IBD. Mesalamine is for mild disease and steroids for moderate disease.",
+                            "docRef": "Inflammatory Bowel Disease"
+                        },
+                        {
+                            "id": "gi-08",
+                            "question": "A patient's HBV serology shows only a positive anti-HBs antibody. This indicates which of the following?",
+                            "options": [
+                                "Acute infection",
+                                "Chronic infection",
+                                "Immunity from vaccination",
+                                "Window period"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "A positive anti-HBs antibody with negative HBsAg and anti-HBc indicates immunity from vaccination.",
+                            "docRef": "Hepatitis serologies"
+                        },
+                        {
+                            "id": "gi-09",
+                            "question": "A patient presents with fever, jaundice, and RUQ pain. What is the name of this classic triad?",
+                            "options": [
+                                "Beck's triad",
+                                "Charcot's triad",
+                                "Whipple's triad",
+                                "Samter's triad"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The triad of fever, jaundice, and right upper quadrant (RUQ) pain is known as Charcot's triad and is a sign of ascending cholangitis.",
+                            "docRef": "Biliary Tract"
+                        }
+                    ]
+                },
+                {
+                    "title": "Rheumatology & Immunology",
+                    "questions": [
+                        {
+                            "id": "rheum-01",
+                            "question": "A patient with joint pain has a positive anti-CCP antibody test. Which of the following is the most likely diagnosis?",
+                            "options": [
+                                "Systemic lupus erythematosus (SLE)",
+                                "Rheumatoid arthritis (RA)",
+                                "Sjögren syndrome",
+                                "Scleroderma"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Anti-CCP (anti-cyclic citrullinated peptide) antibodies are highly specific for rheumatoid arthritis and are often positive even in early disease.",
+                            "docRef": "Rheumatology & Immunology (Updated 2023)"
+                        },
+                        {
+                            "id": "rheum-02",
+                            "question": "A patient with a history of recurrent fevers, joint pain, and a rash is found to have a positive ANA. Which antibody is most specific for their diagnosis of SLE?",
+                            "options": [
+                                "Anti-dsDNA",
+                                "Anti-Ro/SSA",
+                                "Anti-La/SSB",
+                                "Anti-centromere"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "While ANA is sensitive, anti-dsDNA and anti-Smith antibodies are the most specific for diagnosing Systemic Lupus Erythematosus (SLE).",
+                            "docRef": "Rheumatology & Immunology (Updated 2023)"
+                        },
+                        {
+                            "id": "rheum-03",
+                            "question": "Which of the following is a key distinguishing feature of Bullous pemphigoid compared to Pemphigus vulgaris?",
+                            "options": [
+                                "Nikolsky sign is positive",
+                                "Oral mucosa is involved",
+                                "Blistering is intraepidermal",
+                                "Tense bullae that do not easily rupture"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "Bullous pemphigoid is characterized by tense bullae and a negative Nikolsky sign, as the blistering is subepidermal. Pemphigus vulgaris has flaccid bullae, oral involvement, and a positive Nikolsky sign.",
+                            "docRef": "Dermatology (Updated 2023)"
+                        },
+                        {
+                            "id": "rheum-04",
+                            "question": "A 70-year-old male presents with a headache, jaw claudication, and vision loss. His ESR is elevated. What is the most appropriate next step in management?",
+                            "options": [
+                                "Order a biopsy of the temporal artery",
+                                "Start high-dose steroids immediately",
+                                "Check for anti-PR3 antibodies",
+                                "Initiate aspirin therapy"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "In a patient with suspected Giant cell arteritis (GCA), high-dose steroids should be started immediately to prevent irreversible vision loss, even before a temporal artery biopsy is performed.",
+                            "docRef": "Rheumatology & Immunology (Updated 2023)"
+                        },
+                        {
+                            "id": "rheum-05",
+                            "question": "A patient presents with a swollen, painful joint. Arthrocentesis reveals needle-shaped, negatively birefringent crystals. What is the diagnosis?",
+                            "options": [
+                                "Gout",
+                                "Pseudogout",
+                                "Septic arthritis",
+                                "Osteoarthritis"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Needle-shaped, negatively birefringent crystals are the classic finding for gout. Pseudogout crystals are rhomboid and positively birefringent.",
+                            "docRef": "Rheumatology & Immunology (Updated 2023)"
+                        },
+                        {
+                            "id": "rheum-06",
+                            "question": "What is the primary association of the anti-centromere antibody?",
+                            "options": [
+                                "Limited cutaneous scleroderma (CREST)",
+                                "Diffuse cutaneous scleroderma",
+                                "Polymyositis",
+                                "Sjögren syndrome"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "The anti-centromere antibody is associated with the limited cutaneous form of systemic sclerosis (scleroderma), also known as CREST syndrome.",
+                            "docRef": "Scleroderma (Systemic Sclerosis)"
+                        },
+                        {
+                            "id": "rheum-07",
+                            "question": "A patient presents with symmetric small joint pain and morning stiffness lasting over an hour. Which DMARD is the first-line treatment?",
+                            "options": [
+                                "Methotrexate",
+                                "Rituximab",
+                                "Steroids",
+                                "Hydroxychloroquine"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Methotrexate is the first-line disease-modifying antirheumatic drug (DMARD) for rheumatoid arthritis. Steroids are for bridge therapy, and biologics are for refractory cases.",
+                            "docRef": "Rheumatology & Immunology (Updated 2023)"
+                        },
+                        {
+                            "id": "rheum-08",
+                            "question": "A patient presents with dry eyes and a dry mouth. What is the primary risk associated with this condition?",
+                            "options": [
+                                "Endometrial cancer",
+                                "Non-Hodgkin lymphoma",
+                                "Thyroid cancer",
+                                "Multiple myeloma"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Sjögren syndrome, characterized by dry eyes and dry mouth, is associated with an increased risk of developing non-Hodgkin lymphoma.",
+                            "docRef": "Sjögren Syndrome"
+                        },
+                        {
+                            "id": "rheum-09",
+                            "question": "A patient presents with a painful, swollen knee joint. The joint fluid analysis shows rhomboid, positively birefringent crystals. What is the diagnosis?",
+                            "options": [
+                                "Gout",
+                                "Pseudogout",
+                                "Septic arthritis",
+                                "Osteoarthritis"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Rhomboid, positively birefringent crystals are the classic finding for pseudogout, which is caused by calcium pyrophosphate deposition.",
+                            "docRef": "Crystalline Arthropathies"
+                        },
+                        {
+                            "id": "rheum-10",
+                            "question": "Which of the following is NOT part of the classic triad for Reactive Arthritis?",
+                            "options": [
+                                "Arthritis",
+                                "Urethritis",
+                                "Conjunctivitis",
+                                "Diarrhea"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "The classic triad for reactive arthritis is 'can't see, can't pee, can't climb a tree,' referring to conjunctivitis, urethritis, and arthritis. It often follows a gastrointestinal or GU infection.",
+                            "docRef": "Other Rheumatology High-Yield"
+                        }
+                    ]
+                },
+                {
+                    "title": "Reproductive Medicine",
+                    "questions": [
+                        {
+                            "id": "rep-01",
+                            "question": "What is the most common cause of abnormal uterine bleeding in adolescents?",
+                            "options": [
+                                "Endometriosis",
+                                "Fibroids",
+                                "Anovulation",
+                                "Endometrial cancer"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Anovulation is the most common cause of abnormal uterine bleeding in adolescents and perimenopausal women.",
+                            "docRef": "Reproductive Medicine (OB + GYN, Updated 2023)"
+                        },
+                        {
+                            "id": "rep-02",
+                            "question": "A patient presents with dysmenorrhea, dyspareunia, and infertility. Laparoscopy reveals 'chocolate cysts'. What is the most likely diagnosis?",
+                            "options": [
+                                "PCOS",
+                                "Endometriosis",
+                                "Fibroids",
+                                "Cervical cancer"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The triad of dysmenorrhea, dyspareunia, and infertility, along with the finding of 'chocolate cysts' on laparoscopy, is classic for endometriosis.",
+                            "docRef": "Reproductive Medicine (OB + GYN, Updated 2023)"
+                        },
+                        {
+                            "id": "rep-03",
+                            "question": "A 65-year-old postmenopausal woman presents with vaginal bleeding. What is the most appropriate next step in her evaluation?",
+                            "options": [
+                                "Transvaginal ultrasound",
+                                "Reassurance and observation",
+                                "Endometrial biopsy",
+                                "Start oral estrogen therapy"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Postmenopausal bleeding is an endometrial cancer until proven otherwise, and the most appropriate next step for diagnosis is an endometrial biopsy.",
+                            "docRef": "Reproductive Medicine (OB + GYN, Updated 2023)"
+                        },
+                        {
+                            "id": "rep-04",
+                            "question": "During a normal pregnancy, which of the following changes is expected?",
+                            "options": [
+                                "Decreased plasma volume",
+                                "Increased RBC mass greater than increased plasma volume",
+                                "Decreased cardiac output",
+                                "Physiologic anemia of pregnancy"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "In a normal pregnancy, plasma volume increases more than red blood cell (RBC) mass, leading to a dilutional or 'physiologic anemia of pregnancy'.",
+                            "docRef": "Normal Pregnancy"
+                        },
+                        {
+                            "id": "rep-05",
+                            "question": "A pregnant patient with painless third-trimester bleeding is admitted to the hospital. What is the most likely diagnosis?",
+                            "options": [
+                                "Placental abruption",
+                                "Placenta previa",
+                                "Ectopic pregnancy",
+                                "Endometrial cancer"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Painless third-trimester bleeding is the classic presentation for placenta previa, where the placenta covers the cervical os.",
+                            "docRef": "Placental disorders"
+                        },
+                        {
+                            "id": "rep-06",
+                            "question": "Which of the following is an absolute contraindication to using oral contraceptive pills (OCPs)?",
+                            "options": [
+                                "History of gestational diabetes",
+                                "History of migraines with aura",
+                                "Smoking under 35 years old",
+                                "Family history of breast cancer"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Migraines with aura significantly increase the risk of stroke in women taking OCPs, making it an absolute contraindication.",
+                            "docRef": "Contraception"
+                        },
+                        {
+                            "id": "rep-07",
+                            "question": "Which sexually transmitted infection (STI) is characterized by frothy, green discharge and a 'strawberry cervix'?",
+                            "options": [
+                                "Chlamydia",
+                                "Gonorrhea",
+                                "Trichomonas",
+                                "Bacterial vaginosis (BV)"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Trichomonas vaginalis is a flagellated protozoan that causes frothy, green discharge and the characteristic 'strawberry cervix' on speculum exam.",
+                            "docRef": "Sexually Transmitted Infections"
+                        }
+                    ]
+                },
+                {
+                    "title": "Pediatrics",
+                    "questions": [
+                        {
+                            "id": "peds-01",
+                            "question": "A newborn, delivered via C-section, has respiratory distress with 'ground-glass' lungs on X-ray. What is the most likely diagnosis?",
+                            "options": [
+                                "Respiratory distress syndrome",
+                                "Transient tachypnea of the newborn",
+                                "Meconium ileus",
+                                "Congenital diaphragmatic hernia"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Respiratory distress syndrome (RDS) is caused by surfactant deficiency in premature infants and presents with 'ground-glass' lungs. Transient tachypnea of the newborn is more common in full-term infants delivered via C-section.",
+                            "docRef": "Pediatrics (Updated 2023)"
+                        },
+                        {
+                            "id": "peds-02",
+                            "question": "A 2-month-old infant presents with projectile, non-bilious vomiting. A palpable 'olive' is noted on physical exam. What is the most likely diagnosis?",
+                            "options": [
+                                "Intussusception",
+                                "Pyloric stenosis",
+                                "Meckel diverticulum",
+                                "Hirschsprung disease"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Projectile, non-bilious vomiting and a palpable 'olive' are the classic presentation for pyloric stenosis. Diagnosis is confirmed with an ultrasound.",
+                            "docRef": "Pediatrics (Updated 2023)"
+                        },
+                        {
+                            "id": "peds-03",
+                            "question": "A child presents with a high fever that suddenly breaks, followed by the appearance of a rash. What is the most likely cause?",
+                            "options": [
+                                "Measles",
+                                "Roseola",
+                                "Rubella",
+                                "Erythema infectiosum"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Roseola (caused by HHV-6) is characterized by a high fever that precedes the rash. The rash appears as the fever breaks.",
+                            "docRef": "Dermatology (Updated 2023)"
+                        },
+                        {
+                            "id": "peds-04",
+                            "question": "A child presents with a 'slapped cheek' rash. Which virus is the cause?",
+                            "options": [
+                                "Parvovirus B19",
+                                "Varicella",
+                                "Measles virus",
+                                "HHV-6"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Erythema infectiosum, caused by Parvovirus B19, presents with a characteristic 'slapped cheek' rash.",
+                            "docRef": "Dermatology (Updated 2023)"
+                        },
+                        {
+                            "id": "peds-05",
+                            "question": "Which pediatric cancer is characterized by opsoclonus-myoclonus and elevated HVA/VMA levels?",
+                            "options": [
+                                "ALL",
+                                "Neuroblastoma",
+                                "Wilms tumor",
+                                "Retinoblastoma"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Neuroblastoma is a tumor of the adrenal medulla that is associated with opsoclonus-myoclonus syndrome ('dancing eyes, dancing feet') and elevated catecholamine metabolites (HVA/VMA).",
+                            "docRef": "Oncology (Peds)"
+                        },
+                        {
+                            "id": "peds-06",
+                            "question": "A 1-year-old child presents with a limp. Imaging reveals avascular necrosis of the femoral head. What is the most likely diagnosis?",
+                            "options": [
+                                "Developmental dysplasia of the hip (DDH)",
+                                "Slipped capital femoral epiphysis (SCFE)",
+                                "Legg-Calvé-Perthes disease",
+                                "Osgood-Schlatter disease"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Legg-Calvé-Perthes disease is avascular necrosis of the femoral head and typically affects children aged 4–10 years old.",
+                            "docRef": "Orthopedic Pediatrics"
+                        },
+                        {
+                            "id": "peds-07",
+                            "question": "An infant presents with dactylitis (painful swelling of hands/feet). This is the earliest manifestation of which condition?",
+                            "options": [
+                                "Iron deficiency anemia",
+                                "Lead poisoning",
+                                "Sickle cell disease",
+                                "Thalassemia"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Dactylitis, a painful vaso-occlusive crisis in the bones of the hands or feet, is a common early manifestation of sickle cell disease in infants.",
+                            "docRef": "Hematology (Peds)"
+                        },
+                        {
+                            "id": "peds-08",
+                            "question": "A child with a history of recurrent infections is found to have a high fever, drooling, and is in a tripod position. Which diagnosis should be considered?",
+                            "options": [
+                                "Croup",
+                                "Bronchiolitis",
+                                "Epiglottitis",
+                                "Pertussis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The triad of high fever, drooling, and a tripod position is highly suggestive of epiglottitis, which is a medical emergency requiring intubation.",
+                            "docRef": "Infections (Peds)"
+                        }
+                    ]
+                },
+                {
+                    "title": "Screening & Preventive Medicine",
+                    "questions": [
+                        {
+                            "id": "prev-01",
+                            "question": "At what age should a woman begin receiving a Pap smear for cervical cancer screening?",
+                            "options": [
+                                "18",
+                                "21",
+                                "25",
+                                "30"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Cervical cancer screening with a Pap smear should begin at age 21.",
+                            "docRef": "Preventive Medicine"
+                        },
+                        {
+                            "id": "prev-02",
+                            "question": "What is the recommended screening frequency for colon cancer in a patient with no risk factors?",
+                            "options": [
+                                "Every year",
+                                "Every 3 years",
+                                "Every 5 years",
+                                "Every 10 years"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "A colonoscopy is recommended every 10 years for average-risk individuals beginning at age 45.",
+                            "docRef": "Preventive Medicine"
+                        },
+                        {
+                            "id": "prev-03",
+                            "question": "A patient presents with a history of smoking. At what age should they begin annual low-dose CT lung cancer screening?",
+                            "options": [
+                                "40",
+                                "45",
+                                "50",
+                                "55"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Annual low-dose CT for lung cancer screening is recommended for adults aged 50–80 with a 20 pack-year smoking history who have quit within the last 15 years.",
+                            "docRef": "Preventive Medicine"
+                        },
+                        {
+                            "id": "prev-04",
+                            "question": "Which of the following is a classic exception to patient confidentiality?",
+                            "options": [
+                                "Reporting a positive HIV test",
+                                "Discussion with family members",
+                                "Risk of harm to self or others",
+                                "Sharing information with a partner without consent"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Confidentiality can be broken in cases of risk of harm to self or others, child/elder abuse, reportable infectious diseases, and gunshot wounds.",
+                            "docRef": "Ethics & Professionalism"
+                        },
+                        {
+                            "id": "prev-05",
+                            "question": "What is the difference between capacity and competency in medical ethics?",
+                            "options": [
+                                "They are the same; the terms are interchangeable.",
+                                "Capacity is a legal determination, and competency is a medical determination.",
+                                "Capacity is a medical determination, and competency is a legal determination.",
+                                "Capacity is for minor patients, and competency is for adults."
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Capacity is a medical determination of a patient's ability to make their own decisions. Competency is a legal determination made by a court.",
+                            "docRef": "Ethics & Professionalism"
+                        },
+                        {
+                            "id": "prev-06",
+                            "question": "What is the primary difference between the ethical principles of nonmaleficence and beneficence?",
+                            "options": [
+                                "Nonmaleficence is acting in the patient's best interest; beneficence is avoiding harm.",
+                                "They are different names for the same principle.",
+                                "Nonmaleficence is avoiding harm; beneficence is acting in the patient's best interest.",
+                                "Nonmaleficence is respecting a patient's decisions; beneficence is fair allocation of resources."
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Nonmaleficence means 'do no harm,' while beneficence means to 'act in the patient's best interest.'",
+                            "docRef": "Ethics & Professionalism"
+                        }
+                    ]
+                },
+                {
+                    "title": "Statistics & Epidemiology",
+                    "questions": [
+                        {
+                            "id": "stats-01",
+                            "question": "Which type of study design is considered the 'gold standard' for establishing causality?",
+                            "options": [
+                                "Case-control study",
+                                "Cohort study",
+                                "Randomized controlled trial (RCT)",
+                                "Meta-analysis"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The randomized controlled trial (RCT) is considered the 'gold standard' because it minimizes bias and allows for a strong conclusion about causality.",
+                            "docRef": "Statistics / Epidemiology"
+                        },
+                        {
+                            "id": "stats-02",
+                            "question": "Recall bias is a common pitfall in which type of study design?",
+                            "options": [
+                                "Case-control study",
+                                "Cohort study",
+                                "RCT",
+                                "Cross-sectional study"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Recall bias occurs when subjects recall past exposures differently based on their disease status, and it is most common in case-control studies.",
+                            "docRef": "Statistics / Epidemiology"
+                        },
+                        {
+                            "id": "stats-03",
+                            "question": "What is the formula for calculating the Number Needed to Treat (NNT)?",
+                            "options": [
+                                "1 / Absolute Risk Reduction (ARR)",
+                                "1 / Absolute Risk Increase (ARI)",
+                                "True Positives / (True Positives + False Negatives)",
+                                "True Negatives / (True Negatives + False Positives)"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "The Number Needed to Treat (NNT) is calculated as the reciprocal of the Absolute Risk Reduction (ARR).",
+                            "docRef": "Statistics / Epidemiology"
+                        },
+                        {
+                            "id": "stats-04",
+                            "question": "A case-control study is used to determine the odds ratio. What is the key characteristic of this study design?",
+                            "options": [
+                                "It follows a group of people over time to see who develops a disease.",
+                                "It compares a group with a disease to a group without the disease to look for past exposures.",
+                                "It randomly assigns participants to an intervention or control group.",
+                                "It measures a population at a single point in time."
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "A case-control study is retrospective and compares individuals with a disease (cases) to individuals without the disease (controls) to investigate prior exposures.",
+                            "docRef": "Statistics / Epidemiology"
+                        },
+                        {
+                            "id": "stats-05",
+                            "question": "Which statistical measure increases with a higher prevalence of a disease?",
+                            "options": [
+                                "Sensitivity",
+                                "Specificity",
+                                "Negative predictive value (NPV)",
+                                "Positive predictive value (PPV)"
+                            ],
+                            "answerIndex": 3,
+                            "explanation": "The positive predictive value (PPV) is the probability that a positive test result is correct. It increases as the prevalence of the disease in the population increases.",
+                            "docRef": "Statistics / Epidemiology"
+                        }
+                    ]
+                },
+                {
+                    "title": "Musculoskeletal, Orthopedics & Trauma",
+                    "questions": [
+                        {
+                            "id": "msk-01",
+                            "question": "A patient with osteoporosis is being treated with a medication that inhibits osteoclast activity and reduces bone resorption. Which class of medication is this?",
+                            "options": [
+                                "Bisphosphonates",
+                                "Denosumab",
+                                "Teriparatide",
+                                "Calcium"
+                            ],
+                            "answerIndex": 0,
+                            "explanation": "Bisphosphonates are a class of drugs that inhibit osteoclast activity and are the first-line treatment for osteoporosis.",
+                            "docRef": "Bone Disorders"
+                        },
+                        {
+                            "id": "msk-02",
+                            "question": "A child with a history of multiple fractures and blue sclerae is being evaluated. What is the most likely diagnosis?",
+                            "options": [
+                                "Rickets",
+                                "Osteomalacia",
+                                "Osteogenesis imperfecta",
+                                "Paget disease of bone"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Osteogenesis imperfecta is a genetic disorder of collagen synthesis that leads to fragile bones, multiple fractures, and classic findings like blue sclerae and hearing loss.",
+                            "docRef": "Bone Disorders"
+                        },
+                        {
+                            "id": "msk-03",
+                            "question": "A patient with a history of sickle cell disease presents with fever and bone pain. What is the most likely causative organism for osteomyelitis?",
+                            "options": [
+                                "Staphylococcus aureus",
+                                "Streptococcus pneumoniae",
+                                "Salmonella",
+                                "Pseudomonas aeruginosa"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "While S. aureus is the most common cause of osteomyelitis in the general population, Salmonella is the most common in patients with sickle cell disease.",
+                            "docRef": "Infections"
+                        },
+                        {
+                            "id": "msk-04",
+                            "question": "A young baseball player complains of pain at the tibial tubercle that worsens with activity and improves with rest. What is the most likely diagnosis?",
+                            "options": [
+                                "Slipped capital femoral epiphysis (SCFE)",
+                                "Osgood-Schlatter disease",
+                                "Legg-Calvé-Perthes disease",
+                                "Septic arthritis"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Osgood-Schlatter disease is an apophysitis of the tibial tubercle, typically seen in adolescents, that causes pain with activity that resolves with rest.",
+                            "docRef": "Orthopedic Pediatrics"
+                        },
+                        {
+                            "id": "msk-05",
+                            "question": "A patient presents with a palpable thickening of the palmar fascia and contracture of the fourth and fifth fingers. What is the most likely diagnosis?",
+                            "options": [
+                                "Carpal tunnel syndrome",
+                                "De Quervain tenosynovitis",
+                                "Dupuytren contracture",
+                                "Ganglion cyst"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "Dupuytren contracture is characterized by thickening of the palmar fascia leading to a flexion contracture of the fingers, most commonly the fourth and fifth digits.",
+                            "docRef": "Other MSK"
+                        },
+                        {
+                            "id": "msk-06",
+                            "question": "A patient presents with pain that is out of proportion to the injury, paresthesias, and pain on passive stretch. What is the most likely diagnosis?",
+                            "options": [
+                                "Lumbosacral strain",
+                                "Compartment syndrome",
+                                "Septic arthritis",
+                                "Disc herniation"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Pain out of proportion to the injury and pain on passive stretch are the classic early signs of compartment syndrome, a surgical emergency.",
+                            "docRef": "Compartment Syndrome"
+                        }
+                    ]
+                },
+                {
+                    "title": "Emergency Medicine & Critical Care",
+                    "questions": [
+                        {
+                            "id": "em-01",
+                            "question": "A patient presents with decreased preload, decreased cardiac output, and increased systemic vascular resistance (SVR). What type of shock is this?",
+                            "options": [
+                                "Cardiogenic",
+                                "Hypovolemic",
+                                "Distributive",
+                                "Obstructive"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Hypovolemic shock is characterized by a decrease in fluid volume, which leads to decreased preload and cardiac output. The body compensates by increasing SVR.",
+                            "docRef": "Shock"
+                        },
+                        {
+                            "id": "em-02",
+                            "question": "A patient in cardiac arrest is in asystole. What is the most appropriate next step in ACLS management?",
+                            "options": [
+                                "Immediate defibrillation",
+                                "CPR and epinephrine",
+                                "Synchronized cardioversion",
+                                "Amiodarone"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Asystole and PEA are non-shockable rhythms. The correct management is immediate CPR and administration of epinephrine.",
+                            "docRef": "ACLS / Arrhythmias"
+                        },
+                        {
+                            "id": "em-03",
+                            "question": "A patient presents with hypotension, tracheal deviation, and absent breath sounds on one side of the chest. What is the most likely diagnosis?",
+                            "options": [
+                                "Massive pulmonary embolism",
+                                "Tension pneumothorax",
+                                "Cardiac tamponade",
+                                "Acute respiratory distress syndrome (ARDS)"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Hypotension and tracheal deviation are late signs of a tension pneumothorax. The initial treatment is needle decompression.",
+                            "docRef": "Respiratory Emergencies"
+                        },
+                        {
+                            "id": "em-04",
+                            "question": "A patient presents with a core body temperature of $41^{\\circ}C$ and altered mental status. What is the most important treatment step?",
+                            "options": [
+                                "Start warmed IV fluids",
+                                "Administer epinephrine",
+                                "Rapid cooling",
+                                "Give a benzodiazepine"
+                            ],
+                            "answerIndex": 2,
+                            "explanation": "The primary treatment for heat stroke is rapid cooling to lower the body temperature and prevent further organ damage.",
+                            "docRef": "Heat & Cold Injuries"
+                        },
+                        {
+                            "id": "em-05",
+                            "question": "What is the first-line treatment for anaphylaxis?",
+                            "options": [
+                                "IV fluids",
+                                "Epinephrine (IM)",
+                                "Antihistamines",
+                                "Steroids"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "Epinephrine administered intramuscularly (IM) is the first-line and most critical treatment for anaphylaxis.",
+                            "docRef": "Miscellaneous"
+                        },
+                        {
+                            "id": "em-06",
+                            "question": "A patient presents with episodic headache, palpitations, and sweating. What is the first-line diagnostic test?",
+                            "options": [
+                                "Urinary metanephrines",
+                                "Plasma free metanephrines",
+                                "Adrenal CT scan",
+                                "Genetic testing"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "The first-line diagnostic test for pheochromocytoma is plasma free metanephrines.",
+                            "docRef": "Endocrinology (Updated 2023)"
+                        },
+                        {
+                            "id": "em-07",
+                            "question": "A patient presents with signs of sepsis and hypotension after receiving IV fluids. What is the next step in management?",
+                            "options": [
+                                "Add another fluid bolus",
+                                "Start vasopressors (e.g., norepinephrine)",
+                                "Administer a diuretic",
+                                "Start broad-spectrum antibiotics"
+                            ],
+                            "answerIndex": 1,
+                            "explanation": "In septic shock, if hypotension persists despite adequate fluid resuscitation, the next step is to initiate vasopressors to increase blood pressure. Antibiotics should have already been started.",
+                            "docRef": "Shock"
+                        }
+                    ]
+                }
+            ],
+            "coverageChecklist": {
+                "Infectious Disease": ["id-01", "id-02", "id-03", "id-04", "id-05", "id-06", "id-07", "id-08"],
+                "Respiratory Infections": ["resp-01", "resp-02", "resp-03", "resp-04", "resp-05", "resp-06", "resp-07", "resp-08"],
+                "Sepsis & Meningitis": ["sepsis-01", "sepsis-02", "sepsis-03", "sepsis-04", "sepsis-05", "sepsis-06"],
+                "Cardiology": ["cardio-01", "cardio-02", "cardio-03", "cardio-04", "cardio-05", "cardio-06", "cardio-07", "cardio-08", "cardio-09", "cardio-10", "cardio-11", "cardio-12", "cardio-13", "cardio-14", "cardio-15", "cardio-16"],
+                "Pulmonology": ["pulm-01", "pulm-02", "pulm-03", "pulm-04", "pulm-05", "pulm-06", "pulm-07", "pulm-08", "pulm-09"],
+                "Renal & Electrolytes": ["renal-01", "renal-02", "renal-03", "renal-04", "renal-05", "renal-06", "renal-07", "renal-08"],
+                "Neurology": ["neuro-01", "neuro-02", "neuro-03", "neuro-04", "neuro-05", "neuro-06", "neuro-07", "neuro-08", "neuro-09", "neuro-10", "neuro-11"],
+                "Endocrinology": ["endo-01", "endo-02", "endo-03", "endo-04", "endo-05", "endo-06", "endo-07", "endo-08", "endo-09"],
+                "Hematology & Oncology": ["heme-01", "heme-02", "heme-03", "heme-04", "heme-05", "heme-06", "heme-07", "heme-08", "heme-09", "heme-10"],
+                "Gastroenterology & Hepatology": ["gi-01", "gi-02", "gi-03", "gi-04", "gi-05", "gi-06", "gi-07", "gi-08", "gi-09"],
+                "Rheumatology & Immunology": ["rheum-01", "rheum-02", "rheum-03", "rheum-04", "rheum-05", "rheum-06", "rheum-07", "rheum-08", "rheum-09", "rheum-10"],
+                "Reproductive Medicine": ["rep-01", "rep-02", "rep-03", "rep-04", "rep-05", "rep-06", "rep-07"],
+                "Pediatrics": ["peds-01", "peds-02", "peds-03", "peds-04", "peds-05", "peds-06", "peds-07", "peds-08"],
+                "Screening & Preventive Medicine": ["prev-01", "prev-02", "prev-03", "prev-04", "prev-05", "prev-06"],
+                "Statistics & Epidemiology": ["stats-01", "stats-02", "stats-03", "stats-04", "stats-05"],
+                "Musculoskeletal, Orthopedics & Trauma": ["msk-01", "msk-02", "msk-03", "msk-04", "msk-05", "msk-06"],
+                "Emergency Medicine & Critical Care": ["em-01", "em-02", "em-03", "em-04", "em-05", "em-06", "em-07"]
+            }
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const quizDataScript = document.getElementById('quiz-data');
+            const quizData = JSON.parse(quizDataScript.textContent);
+
+            const startScreen = document.getElementById('start-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            
+            const startQuizButton = document.getElementById('start-quiz-button');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const progressBar = document.querySelector('.progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const explanationContainer = document.getElementById('explanation-container');
+            const explanationText = document.getElementById('explanation-text');
+            const feedbackText = document.getElementById('feedback');
+            const finalScoreElement = document.getElementById('final-score');
+            const restartButton = document.getElementById('restart-button');
+            const reviewButton = document.getElementById('review-button');
+            const reviewList = document.getElementById('review-list');
+            const backToResultsButton = document.getElementById('back-to-results-button');
+            const exportJsonButton = document.getElementById('export-json-button');
+            const exportCsvButton = document.getElementById('export-csv-button');
+            const printButton = document.getElementById('print-button');
+            const coverageChecklist = document.getElementById('coverage-checklist');
+            const generateVignetteButton = document.getElementById('generate-vignette-button');
+            const llmOutputContainer = document.getElementById('llm-output');
+
+            let allQuestions = [];
+            let currentQuestionIndex = 0;
+            let userAnswers = {};
+            let score = 0;
+
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=';
+
+            const shuffle = (array) => {
+                let currentIndex = array.length, randomIndex;
+                while (currentIndex !== 0) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                }
+                return array;
+            };
+
+            const loadQuiz = () => {
+                startScreen.style.display = 'block';
+                quizScreen.style.display = 'none';
+                resultsScreen.style.display = 'none';
+                reviewScreen.style.display = 'none';
+
+                allQuestions = quizData.sections.flatMap(section => section.questions);
+                shuffle(allQuestions);
+                userAnswers = {};
+                score = 0;
+                currentQuestionIndex = 0;
+
+                const storedAnswers = localStorage.getItem('quiz-progress');
+                if (storedAnswers) {
+                    userAnswers = JSON.parse(storedAnswers);
+                    currentQuestionIndex = Object.keys(userAnswers).length;
+                    if (currentQuestionIndex >= allQuestions.length) {
+                         showResults();
+                    }
+                }
+
+                renderCoverageChecklist();
+            };
+
+            const renderCoverageChecklist = () => {
+                coverageChecklist.innerHTML = '';
+                for (const section in quizData.coverageChecklist) {
+                    const sectionHeading = document.createElement('h4');
+                    sectionHeading.textContent = section;
+                    coverageChecklist.appendChild(sectionHeading);
+                    const questionList = document.createElement('ul');
+                    quizData.coverageChecklist[section].forEach(qId => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `Question ID: ${qId}`;
+                        questionList.appendChild(listItem);
+                    });
+                    coverageChecklist.appendChild(questionList);
+                }
+            };
+
+            const showQuestion = (index) => {
+                if (index < 0 || index >= allQuestions.length) {
+                    showResults();
+                    return;
+                }
+                
+                const questionData = allQuestions[index];
+                questionText.textContent = questionData.question;
+                optionsContainer.innerHTML = '';
+                explanationContainer.style.display = 'none';
+                feedbackText.style.display = 'none';
+                llmOutputContainer.style.display = 'none';
+                llmOutputContainer.innerHTML = '';
+
+                const shuffledOptions = shuffle([...questionData.options]);
+                const newAnswerIndex = shuffledOptions.indexOf(questionData.options[questionData.answerIndex]);
+
+                shuffledOptions.forEach((option, optionIndex) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option-button');
+                    button.setAttribute('role', 'radio');
+                    button.setAttribute('aria-checked', 'false');
+                    button.setAttribute('aria-label', `Option ${optionIndex + 1}: ${option}`);
+                    button.addEventListener('click', () => handleAnswer(optionIndex, newAnswerIndex));
+                    optionsContainer.appendChild(button);
+                });
+
+                updateControls();
+                updateProgressBar();
+
+                if (userAnswers[questionData.id] !== undefined) {
+                    displayFeedback(userAnswers[questionData.id].shuffledSelected, userAnswers[questionData.id].shuffledCorrect);
+                    disableOptions();
+                }
+            };
+
+            const handleAnswer = (selectedIndex, newAnswerIndex) => {
+                const questionData = allQuestions[currentQuestionIndex];
+                
+                // Store the selected option's original index and shuffled index for accurate feedback and review.
+                const originalSelected = questionData.options.indexOf(optionsContainer.children[selectedIndex].textContent);
+                userAnswers[questionData.id] = {
+                    selected: originalSelected,
+                    shuffledSelected: selectedIndex,
+                    shuffledCorrect: newAnswerIndex
+                };
+                
+                displayFeedback(selectedIndex, newAnswerIndex);
+                disableOptions();
+                
+                if (selectedIndex === newAnswerIndex) {
+                    score++;
+                }
+
+                localStorage.setItem('quiz-progress', JSON.stringify(userAnswers));
+            };
+
+            const displayFeedback = (selectedIndex, newAnswerIndex) => {
+                const questionData = allQuestions[currentQuestionIndex];
+
+                // Remove old classes
+                Array.from(optionsContainer.children).forEach(btn => {
+                    btn.classList.remove('correct', 'incorrect');
+                });
+                
+                // Highlight user's choice
+                const selectedButton = optionsContainer.children[selectedIndex];
+                selectedButton.setAttribute('aria-checked', 'true');
+                if (selectedIndex === newAnswerIndex) {
+                    selectedButton.classList.add('correct');
+                    feedbackText.textContent = 'Correct!';
+                    feedbackText.classList.add('correct');
+                } else {
+                    selectedButton.classList.add('incorrect');
+                    feedbackText.textContent = 'Incorrect.';
+                    feedbackText.classList.add('incorrect');
+                    // Also highlight the correct answer
+                    optionsContainer.children[newAnswerIndex].classList.add('correct');
+                }
+                
+                explanationText.textContent = questionData.explanation + ' (Source: ' + questionData.docRef + ')';
+                explanationContainer.style.display = 'block';
+                feedbackText.style.display = 'block';
+            };
+
+            const disableOptions = () => {
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                    button.setAttribute('aria-disabled', 'true');
+                });
+                nextButton.disabled = false;
+            };
+
+            const updateControls = () => {
+                prevButton.disabled = currentQuestionIndex === 0;
+                nextButton.disabled = userAnswers[allQuestions[currentQuestionIndex].id] === undefined;
+            };
+
+            const updateProgressBar = () => {
+                const progress = ((currentQuestionIndex) / allQuestions.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                const progressTextElement = document.getElementById('progress-text');
+                progressTextElement.textContent = `Question ${currentQuestionIndex + 1} of ${allQuestions.length}`;
+                progressBar.parentElement.setAttribute('aria-valuenow', progress.toFixed(0));
+            };
+
+            const showResults = () => {
+                quizScreen.style.display = 'none';
+                resultsScreen.style.display = 'block';
+                let correctCount = 0;
+                for (const qId in userAnswers) {
+                    const question = allQuestions.find(q => q.id === qId);
+                    if (userAnswers[qId].selected === question.answerIndex) {
+                        correctCount++;
+                    }
+                }
+                finalScoreElement.textContent = `${correctCount} / ${allQuestions.length}`;
+                localStorage.removeItem('quiz-progress');
+            };
+
+            const showReviewScreen = () => {
+                resultsScreen.style.display = 'none';
+                reviewScreen.style.display = 'block';
+                reviewList.innerHTML = '';
+                allQuestions.forEach(question => {
+                    const userSelectedAnswerIndex = userAnswers[question.id] ? userAnswers[question.id].selected : -1;
+                    const reviewItem = document.createElement('li');
+                    reviewItem.classList.add('review-item');
+                    
+                    const questionHeader = document.createElement('h4');
+                    questionHeader.textContent = question.question;
+                    reviewItem.appendChild(questionHeader);
+
+                    const userAnswerText = document.createElement('p');
+                    userAnswerText.classList.add('your-answer');
+                    if (userSelectedAnswerIndex !== -1) {
+                        userAnswerText.innerHTML = `Your Answer: <span class="${userSelectedAnswerIndex === question.answerIndex ? 'correct-answer' : 'incorrect-answer'}">${question.options[userSelectedAnswerIndex]}</span>`;
+                    } else {
+                         userAnswerText.innerHTML = 'Your Answer: <span class="incorrect-answer">No answer provided</span>';
+                    }
+                    reviewItem.appendChild(userAnswerText);
+
+                    const correctAnswerText = document.createElement('p');
+                    correctAnswerText.classList.add('correct-answer');
+                    correctAnswerText.textContent = `Correct Answer: ${question.options[question.answerIndex]}`;
+                    reviewItem.appendChild(correctAnswerText);
+
+                    const explanationText = document.createElement('p');
+                    explanationText.classList.add('explanation');
+                    explanationText.innerHTML = `<strong>Explanation:</strong> ${question.explanation}`;
+                    reviewItem.appendChild(explanationText);
+
+                    const docRefText = document.createElement('p');
+                    docRefText.classList.add('doc-ref');
+                    docRefText.textContent = `(Source: ${question.docRef})`;
+                    reviewItem.appendChild(docRefText);
+
+                    reviewList.appendChild(reviewItem);
+                });
+            };
+
+            const exportResults = (type) => {
+                let data = [];
+                allQuestions.forEach(question => {
+                    const userAnswer = userAnswers[question.id];
+                    const selectedAnswerText = userAnswer ? question.options[userAnswer.selected] : 'N/A';
+                    const isCorrect = userAnswer ? (userAnswer.selected === question.answerIndex) : false;
+                    data.push({
+                        "Question ID": question.id,
+                        "Question": question.question,
+                        "Your Answer": selectedAnswerText,
+                        "Correct Answer": question.options[question.answerIndex],
+                        "Is Correct": isCorrect,
+                        "Explanation": question.explanation
+                    });
+                });
+
+                let filename = `quiz_results.${type}`;
+                let content;
+
+                if (type === 'json') {
+                    content = JSON.stringify(data, null, 2);
+                    download(content, filename, 'application/json');
+                } else if (type === 'csv') {
+                    const headers = ["Question ID", "Question", "Your Answer", "Correct Answer", "Is Correct", "Explanation"];
+                    let csv = headers.join(',') + '\n';
+                    data.forEach(row => {
+                        const values = headers.map(header => {
+                            const value = row[header];
+                            const escaped = typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
+                            return escaped;
+                        });
+                        csv += values.join(',') + '\n';
+                    });
+                    content = csv;
+                    download(content, filename, 'text/csv');
+                }
+            };
+
+            const download = (content, filename, mimeType) => {
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            const printSummary = () => {
+                const printableArea = window.open('', 'Print Quiz Summary');
+                printableArea.document.write('<html><head><title>Quiz Summary</title>');
+                printableArea.document.write('<style>body{font-family: Arial, sans-serif; padding: 20px;} h2, h3 { color: #4A90E2; } .correct { color: green; } .incorrect { color: red; } .review-item { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }</style>');
+                printableArea.document.write('</head><body>');
+                printableArea.document.write('<h2>Quiz Results</h2>');
+                printableArea.document.write(`<p>Score: ${finalScoreElement.textContent}</p>`);
+                printableArea.document.write('<h3>Review of Answers</h3>');
+                reviewList.innerHTML = '';
+                showReviewScreen(); // Temporarily populate review list
+                printableArea.document.write(reviewList.outerHTML);
+                backToResultsButton.click(); // Return to original screen
+                printableArea.document.write('</body></html>');
+                printableArea.document.close();
+                printableArea.print();
+            };
+
+            const generateVignette = async () => {
+                const questionData = allQuestions[currentQuestionIndex];
+                const prompt = `Based on the following multiple-choice question and its explanation from a medical study guide, create a concise clinical vignette for a medical student to help them understand the concept. Do not provide a diagnosis or answer in the vignette. The vignette should be a few sentences long, a single paragraph, and present a patient scenario that leads to the topic of the question.
+
+Question: "${questionData.question}"
+Explanation: "${questionData.explanation}"
+Answer: "${questionData.options[questionData.answerIndex]}"
+
+Clinical vignette:`;
+                
+                llmOutputContainer.innerHTML = `<div class="loading">Generating vignette...</div>`;
+                llmOutputContainer.style.display = 'block';
+                generateVignetteButton.disabled = true;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                
+                const payload = {
+                    contents: chatHistory
+                };
+
+                const apiKey = ""
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates[0].content.parts[0].text;
+                    llmOutputContainer.innerHTML = text.replace(/\n/g, '<br>');
+                } catch (error) {
+                    llmOutputContainer.innerHTML = `<div>Error generating vignette. Please try again later.</div>`;
+                    console.error('LLM API Error:', error);
+                } finally {
+                    generateVignetteButton.disabled = false;
+                }
+            };
+
+
+            startQuizButton.addEventListener('click', () => {
+                startScreen.style.display = 'none';
+                quizScreen.style.display = 'block';
+                currentQuestionIndex = 0;
+                showQuestion(currentQuestionIndex);
+            });
+
+            nextButton.addEventListener('click', () => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < allQuestions.length) {
+                    showQuestion(currentQuestionIndex);
+                } else {
+                    showResults();
+                }
+            });
+
+            prevButton.addEventListener('click', () => {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            });
+
+            restartButton.addEventListener('click', () => {
+                localStorage.removeItem('quiz-progress');
+                loadQuiz();
+            });
+
+            reviewButton.addEventListener('click', showReviewScreen);
+            backToResultsButton.addEventListener('click', () => {
+                reviewScreen.style.display = 'none';
+                resultsScreen.style.display = 'block';
+            });
+            exportJsonButton.addEventListener('click', () => exportResults('json'));
+            exportCsvButton.addEventListener('click', () => exportResults('csv'));
+            printButton.addEventListener('click', printSummary);
+            generateVignetteButton.addEventListener('click', generateVignette);
+
+            loadQuiz();
+        });
+    </script>
+</body>
+</html>
